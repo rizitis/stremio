@@ -1,0 +1,10 @@
+Stremio is a modern media center.
+
+Movies, TV shows, live TV or web channels - find all this on Stremio.
+
+Slackbuild script build stremio in /opt directory,
+and install a stremio.desktop entry.
+You can run stremio from menu or from terminal
+```
+/opt/stremio-shell/build/stremio &
+```

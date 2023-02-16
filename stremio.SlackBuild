@@ -1,0 +1,116 @@
+#!/bin/bash
+
+# Slackware build script for stremio
+
+# Copyright 2023 Anagnostakis Ioannis and Athanasios Kormas GR Greece 
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+cd $(dirname $0) ; CWD=$(pwd)
+
+PRGNAM=stremio			
+VERSION=${VERSION:-shell}	
+BUILD=${BUILD:-1}
+TAG=${TAG:-_SBo}
+PKGTYPE=${PKGTYPE:-tgz}		
+
+
+if [ -z "$ARCH" ]; then
+  case "$( uname -m )" in
+    i?86) ARCH=i586 ;;
+    arm*) ARCH=arm ;;
+# Unless $ARCH is already set, use uname -m for all other archs:
+       *) ARCH=$( uname -m ) ;;
+  esac
+fi
+
+
+if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
+  echo "$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE"
+  exit 0
+fi
+
+TMP=${TMP:-/opt}		
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}		
+
+if [ "$ARCH" = "i586" ]; then
+  SLKCFLAGS="-O2 -march=i586 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "i686" ]; then
+  SLKCFLAGS="-O2 -march=i686 -mtune=i686"
+  LIBDIRSUFFIX=""
+elif [ "$ARCH" = "x86_64" ]; then
+  SLKCFLAGS="-O2 -fPIC"
+  LIBDIRSUFFIX="64"
+else
+  SLKCFLAGS="-O2"
+  LIBDIRSUFFIX=""
+fi
+
+
+
+rm -rf $PKG-$VERSION
+mkdir -p $TMP $PKG-$VERSION $OUTPUT
+cd $TMP || exit
+rm -rf $PRGNAM-$VERSION
+git clone --recurse-submodules https://github.com/Stremio/stremio-shell.git
+
+
+cd $PRGNAM-$VERSION || exit
+sed -i 's/qmake/qmake-qt5/g' release.makefile
+ chown -R root:root .
+ find -L . \
+ \( -perm 777 -o -perm 775 -o -perm 750 -o -perm 711 -o -perm 555 \
+  -o -perm 511 \) -exec chmod 755 {} \; -o \
+ \( -perm 666 -o -perm 664 -o -perm 640 -o -perm 600 -o -perm 444 \
+  -o -perm 440 -o -perm 400 \) -exec chmod 644 {} \;
+
+
+qmake-qt5
+make -f release.makefile
+cp ./server.js ./build/ 
+rm -rf *makefile* Makefile *.js distros *qml* *.cpp *.txt OpenSuseLeap.md flatpak smartcode-stremio.desktop CMakeModules *.bat *.c DEBIAN.md WINDOWS.md *json icons *.h *makefile *pro DOCKER.md *.yml *.pri stremio.rc windows Info.plist deps mac dist-utils scripts .*
+mkdir -p $PKG-$VERSION/usr/doc/$PRGNAM-$VERSION 
+cp -a LICENSE.md README.md \
+ $PKG-$VERSION/usr/doc/$PRGNAM-$VERSION
+mkdir -p $PKG-$VERSION/usr/share/$PRGNAM-$VERSION
+cp -R  images \
+ $PKG-$VERSION/usr/share/$PRGNAM-$VERSION
+ mkdir -p $PKG-$VERSION/usr/share/applications
+cp -a $CWD/stremio.desktop \
+ $PKG-$VERSION/usr/share/applications
+cd ..
+# Don't ship .la files:
+rm -f $PKG/{,usr/}lib${LIBDIRSUFFIX}/*.la
+rm -f $PKG-$VERSION/{,usr/}lib${LIBDIRSUFFIX}/*.la
+rm -rf $TMP/package-$PRGNAM
+mkdir -p $PKG-$VERSION/usr/doc/$PRGNAM-$VERSION
+cat $CWD/$PRGNAM.SlackBuild > $PKG-$VERSION/usr/doc/$PRGNAM-$VERSION/$PRGNAM.SlackBuild
+
+mkdir -p $PKG-$VERSION/install
+cat $CWD/slack-desc > $PKG-$VERSION/install/slack-desc
+cat $CWD/doinst.sh > $PKG-$VERSION/install/doinst.sh
+cat $CWD/douninst.sh > $PKG-$VERSION/install/douninst.sh
+if [ -d /opt/stremio-shell ]; then
+   ln -s /usr/bin/node /opt/stremio-shell/build
+fi
+cd $PKG-$VERSION
+sudo /sbin/makepkg -p -c n $OUTPUT/$PRGNAM-$VERSION-$ARCH-$BUILD$TAG.$PKGTYPE
