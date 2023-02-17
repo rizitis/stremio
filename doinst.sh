@@ -15,3 +15,7 @@ fi
 if [ -d /opt/stremio-shell ]; then
    ln -s /usr/bin/node /opt/stremio-shell/build
 fi
+
+if [ -d /opt/stremio-shell/images ]; then
+ln -s /opt/stremio-shell/images/stremio.png /usr/share/pixmaps/stremio.png
+fi
