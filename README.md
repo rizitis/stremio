@@ -30,5 +30,6 @@ and as root command
 ```
 ./stremio.SlackBuild
 ```
+During to some bugs (not SLackware) if you cant build as orgininal root (su -l) try with be root with (su) and then run again slackbuild script...
 ### Deps
 Deps are in the info file...
